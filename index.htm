@@ -186,15 +186,15 @@
       font-size: 13px;
     }
 
-    .problem{
-      display:flex;
-      align-items:flex-end;
-      justify-content:center;
-      gap: 12px;
-      padding: 14px 10px 4px;
-      font-variant-numeric: tabular-nums;
-      flex-wrap:wrap;
-    }
+.problem{
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  gap: 12px;
+  padding: 14px 10px 4px;
+  font-variant-numeric: tabular-nums;
+  flex-wrap: wrap; /* 問題自体は画面が狭い時に折り返してOK */
+}
     .num{
       font-size: clamp(34px, 6vw, 56px);
       font-weight: 800;
@@ -215,12 +215,16 @@
       opacity:.72;
       padding-bottom: 6px;
     }
-    .ansSlot{
-      display:flex;
-      gap: 10px;
-      align-items:flex-end;
-      padding-bottom: 2px;
-    }
+ /* 回答欄：絶対に1行（折り返し禁止） */
+.ansSlot{
+  display:flex;
+  gap: 10px;
+  align-items:flex-end;
+  padding-bottom: 2px;
+
+  flex-wrap: nowrap;       /* ★折り返し禁止 */
+  white-space: nowrap;     /* ★テキストも折り返し禁止 */
+}
 
     select{
       appearance: none;
@@ -259,16 +263,34 @@
       font-size: 16px;
     }
 
-    .signSel{ width: 96px; text-align:center; }
-    .digitSel{ width: 110px; text-align:center; }
+/* selectを少し細くして、1行に収まりやすく */
+.signSel{ width: 84px; text-align:center; }
+.digitSel{ width: 92px; text-align:center; }
 
-    .digitGroup{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-      justify-content:center;
-    }
+
+/* 桁のリスト群：1行固定＋はみ出たら横スクロール */
+.digitGroup{
+  display:flex;
+  gap:10px;
+  align-items:center;
+
+  flex-wrap: nowrap;       /* ★折り返し禁止 */
+  overflow-x: auto;        /* ★収まらなければ横スクロール */
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+
+  max-width: min(520px, 70vw); /* ★カード幅に合わせて制限 */
+  padding-bottom: 2px;         /* スクロールバーが出ても見栄え崩れ防止 */
+}
+
+/* 横スクロール時の見た目（任意） */
+.digitGroup::-webkit-scrollbar{
+  height: 8px;
+}
+.digitGroup::-webkit-scrollbar-thumb{
+  background: rgba(255,255,255,.18);
+  border-radius: 999px;
+}
 
     .hint{
       text-align:center;
