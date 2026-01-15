@@ -1,0 +1,1057 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="light dark">
+  <title>計算れんしゅう（四則・整数だけ）</title>
+  <style>
+    :root{
+      --bg: #0b1020;
+      --card: rgba(255,255,255,.08);
+      --card2: rgba(255,255,255,.12);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.64);
+      --line: rgba(255,255,255,.14);
+      --good: #35d07f;
+      --bad: #ff5c7a;
+      --warn: #ffd166;
+      --accent: #7aa7ff;
+      --shadow: 0 24px 80px rgba(0,0,0,.45);
+      --radius: 22px;
+      --radius2: 16px;
+      --focus: 0 0 0 3px rgba(122,167,255,.35);
+    }
+
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f6f8ff;
+        --card: rgba(255,255,255,.9);
+        --card2: rgba(255,255,255,.8);
+        --text: rgba(10,18,38,.92);
+        --muted: rgba(10,18,38,.60);
+        --line: rgba(10,18,38,.10);
+        --shadow: 0 24px 80px rgba(18,35,80,.14);
+        --focus: 0 0 0 3px rgba(70,125,255,.25);
+      }
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans JP", "Hiragino Sans", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% 10%, rgba(122,167,255,.22), transparent 55%),
+        radial-gradient(900px 700px at 80% 30%, rgba(53,208,127,.18), transparent 55%),
+        radial-gradient(900px 700px at 30% 85%, rgba(255,92,122,.12), transparent 60%),
+        var(--bg);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 20px;
+    }
+
+    .app{
+      width:min(980px, 100%);
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 18px;
+    }
+
+    @media (max-width: 880px){
+      .app{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+
+    .header{
+      padding: 18px 18px 14px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      justify-content:space-between;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(to bottom, rgba(255,255,255,.06), transparent);
+    }
+
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap: 4px;
+      min-width: 0;
+    }
+    .title h1{
+      margin:0;
+      font-size: 18px;
+      letter-spacing: .02em;
+    }
+    .title p{
+      margin:0;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+      user-select:none;
+      white-space:nowrap;
+    }
+    .dot{
+      width:9px;height:9px;border-radius:50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(122,167,255,.15);
+    }
+
+    .main{
+      padding: 18px;
+    }
+
+    .problemWrap{
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      padding: 18px;
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+    }
+
+    .problemTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap:wrap;
+    }
+
+    .levelBadge{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .timer{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width: 220px;
+      flex: 1;
+      justify-content:flex-end;
+    }
+    .bar{
+      height: 10px;
+      width: min(360px, 100%);
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      overflow:hidden;
+    }
+    .bar > i{
+      display:block;
+      height:100%;
+      width:100%;
+      background: linear-gradient(90deg, rgba(122,167,255,.95), rgba(53,208,127,.9));
+      transform-origin:left center;
+      transform: scaleX(1);
+    }
+    .timeText{
+      width: 56px;
+      text-align:right;
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .problem{
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      gap: 12px;
+      padding: 14px 10px 4px;
+      font-variant-numeric: tabular-nums;
+      flex-wrap:wrap;
+    }
+    .num{
+      font-size: clamp(34px, 6vw, 56px);
+      font-weight: 800;
+      letter-spacing: .01em;
+      padding: 2px 10px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .op{
+      font-size: clamp(28px, 5vw, 46px);
+      font-weight: 800;
+      opacity:.92;
+    }
+    .eq{
+      font-size: clamp(28px, 5vw, 46px);
+      font-weight: 800;
+      opacity:.72;
+      padding-bottom: 6px;
+    }
+    .ansSlot{
+      display:flex;
+      gap: 10px;
+      align-items:flex-end;
+      padding-bottom: 2px;
+    }
+
+    select{
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 14px 44px 14px 14px;
+      font-size: 18px;
+      font-weight: 700;
+      outline:none;
+      box-shadow: none;
+      cursor:pointer;
+      transition: transform .08s ease, border-color .12s ease, background .12s ease;
+    }
+    select:focus{
+      box-shadow: var(--focus);
+      border-color: rgba(122,167,255,.55);
+      background: rgba(122,167,255,.10);
+    }
+    select:active{ transform: scale(.99); }
+
+    .selectWrap{
+      position:relative;
+      display:inline-flex;
+      align-items:center;
+    }
+    .selectWrap::after{
+      content:"▾";
+      position:absolute;
+      right: 14px;
+      pointer-events:none;
+      opacity:.85;
+      font-size: 16px;
+    }
+
+    .signSel{ width: 96px; text-align:center; }
+    .digitSel{ width: 110px; text-align:center; }
+
+    .digitGroup{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:center;
+    }
+
+    .hint{
+      text-align:center;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      padding: 2px 6px 0;
+    }
+
+    .actions{
+      display:flex;
+      gap: 10px;
+      flex-wrap:wrap;
+      justify-content:center;
+      margin-top: 6px;
+    }
+
+    button{
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.07);
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 16px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor:pointer;
+      transition: transform .08s ease, background .12s ease, border-color .12s ease, box-shadow .12s ease;
+      outline:none;
+    }
+    button:focus{ box-shadow: var(--focus); border-color: rgba(122,167,255,.55); }
+    button:active{ transform: scale(.99); }
+    .primary{
+      background: linear-gradient(135deg, rgba(122,167,255,.95), rgba(53,208,127,.92));
+      border-color: rgba(255,255,255,.18);
+      color: rgba(12,18,32,.92);
+    }
+    .ghost{ background: rgba(255,255,255,.05); }
+    .danger{
+      background: rgba(255,92,122,.12);
+      border-color: rgba(255,92,122,.25);
+    }
+
+    .toast{
+      margin-top: 12px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      padding: 12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      min-height: 52px;
+    }
+    .toast strong{ font-size: 14px; }
+    .toast p{ margin:2px 0 0; font-size: 13px; color: var(--muted); line-height:1.4; }
+    .toast .badge{
+      font-variant-numeric: tabular-nums;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      font-size: 12px;
+      color: var(--muted);
+      white-space:nowrap;
+    }
+    .toast.good{ border-color: rgba(53,208,127,.40); background: rgba(53,208,127,.08); }
+    .toast.bad{ border-color: rgba(255,92,122,.40); background: rgba(255,92,122,.08); }
+
+    /* 右カラム */
+    .side{
+      display:flex;
+      flex-direction:column;
+    }
+    .side .section{
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .side h2{
+      margin:0 0 8px;
+      font-size: 14px;
+      letter-spacing: .02em;
+      color: var(--text);
+    }
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-top: 1px dashed rgba(255,255,255,.12);
+    }
+    .row:first-of-type{ border-top:none; }
+    .row .k{
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .row .v{
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .chipset{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 10px;
+      padding: 6px 0 4px;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      cursor:pointer;
+      user-select:none;
+      font-size: 13px;
+      font-weight: 700;
+      transition: background .12s ease, border-color .12s ease, transform .08s ease;
+    }
+    .chip:active{ transform: scale(.99); }
+    .chip input{ display:none; }
+    .chip[data-checked="true"]{
+      background: rgba(122,167,255,.14);
+      border-color: rgba(122,167,255,.40);
+    }
+    .chip small{
+      font-weight: 700;
+      opacity:.8;
+    }
+
+    .range{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      padding: 6px 0 0;
+    }
+    .range label{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    input[type="range"]{
+      width:100%;
+      accent-color: var(--accent);
+    }
+
+    .mini{
+      padding: 14px 16px 16px;
+    }
+    .mini p{
+      margin:0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .kbd{
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      padding: 2px 7px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .srOnly{
+      position:absolute;
+      width:1px;height:1px;
+      padding:0;margin:-1px;
+      overflow:hidden;clip:rect(0,0,0,0);
+      white-space:nowrap;border:0;
+    }
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="四則演算の計算練習アプリ">
+    <!-- メイン -->
+    <section class="card">
+      <div class="header">
+        <div class="title">
+          <h1>計算れんしゅう（四則・整数だけ）</h1>
+          <p>答えは <b>符号（±）</b> と <b>数字</b> をリストで選ぶだけ。割り算は <b>割り切れる問題</b> だけ出題します。</p>
+        </div>
+        <div class="pill" title="入力方式">
+          <span class="dot" aria-hidden="true"></span>
+          リスト選択式
+        </div>
+      </div>
+
+      <div class="main">
+        <div class="problemWrap">
+          <div class="problemTop">
+            <div class="levelBadge" id="modeBadge">モード：ふつう</div>
+            <div class="timer" aria-label="タイマー">
+              <div class="bar" aria-hidden="true"><i id="timeBar"></i></div>
+              <div class="timeText"><span id="timeLeft">--</span>s</div>
+            </div>
+          </div>
+
+          <div class="problem" aria-live="polite">
+            <span class="num" id="a">12</span>
+            <span class="op" id="op">＋</span>
+            <span class="num" id="b">3</span>
+            <span class="eq">＝</span>
+
+            <div class="ansSlot" aria-label="回答欄（符号と数字を選択）">
+              <div class="selectWrap">
+                <label class="srOnly" for="signSel">符号</label>
+                <select id="signSel" class="signSel" aria-label="符号を選択">
+                  <option value="+">＋</option>
+                  <option value="-">−</option>
+                </select>
+              </div>
+
+              <div class="digitGroup" id="digitGroup" aria-label="数字を選択">
+                <!-- JSで桁数に応じて生成 -->
+              </div>
+            </div>
+          </div>
+
+          <div class="hint" id="hint">
+            まずは落ち着いて式を見ましょう。迷ったら <b>小さく分けて考える</b> とラクになります。
+          </div>
+
+          <div class="actions">
+            <button class="primary" id="checkBtn" type="button">答え合わせ <span class="kbd">Enter</span></button>
+            <button class="ghost" id="nextBtn" type="button" disabled>つぎへ <span class="kbd">N</span></button>
+            <button class="danger" id="resetBtn" type="button">リセット</button>
+          </div>
+
+          <div class="toast" id="toast" aria-live="polite">
+            <div>
+              <strong id="toastTitle">準備OK</strong>
+              <p id="toastMsg">「答え合わせ」を押してみましょう。</p>
+            </div>
+            <div class="badge" id="toastBadge">連続正解 0</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- サイド -->
+    <aside class="card side" aria-label="設定と成績">
+      <div class="section">
+        <h2>出題設定</h2>
+
+        <div class="chipset" role="group" aria-label="出題する演算">
+          <div class="chip" data-op="add" data-checked="true" tabindex="0" role="checkbox" aria-checked="true">
+            <input type="checkbox" checked />
+            ＋ <small>たし算</small>
+          </div>
+          <div class="chip" data-op="sub" data-checked="true" tabindex="0" role="checkbox" aria-checked="true">
+            <input type="checkbox" checked />
+            − <small>ひき算</small>
+          </div>
+          <div class="chip" data-op="mul" data-checked="true" tabindex="0" role="checkbox" aria-checked="true">
+            <input type="checkbox" checked />
+            × <small>かけ算</small>
+          </div>
+          <div class="chip" data-op="div" data-checked="true" tabindex="0" role="checkbox" aria-checked="true">
+            <input type="checkbox" checked />
+            ÷ <small>わり算</small>
+          </div>
+        </div>
+
+        <div class="range">
+          <label>
+            数の大きさ（0〜）
+            <span class="v"><span id="maxNLabel">20</span></span>
+          </label>
+          <input id="maxN" type="range" min="5" max="200" step="1" value="20" />
+        </div>
+
+        <div class="range">
+          <label>
+            モード（桁数）
+            <span class="v" id="modeLabel">ふつう（最大2桁）</span>
+          </label>
+          <input id="mode" type="range" min="0" max="2" step="1" value="1" />
+        </div>
+
+        <div class="range">
+          <label>
+            制限時間（0で無制限）
+            <span class="v"><span id="limitLabel">0</span>s</span>
+          </label>
+          <input id="limit" type="range" min="0" max="60" step="5" value="0" />
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>成績</h2>
+        <div class="row">
+          <div class="k">正解 / 回答</div>
+          <div class="v"><span id="correct">0</span> / <span id="total">0</span></div>
+        </div>
+        <div class="row">
+          <div class="k">正答率</div>
+          <div class="v"><span id="acc">--</span>%</div>
+        </div>
+        <div class="row">
+          <div class="k">連続正解</div>
+          <div class="v"><span id="streak">0</span></div>
+        </div>
+        <div class="row">
+          <div class="k">ベスト連続</div>
+          <div class="v"><span id="best">0</span></div>
+        </div>
+      </div>
+
+      <div class="mini">
+        <p>
+          ショートカット：<span class="kbd">Enter</span>＝答え合わせ　
+          <span class="kbd">N</span>＝つぎへ　
+          <span class="kbd">R</span>＝リセット
+        </p>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    (() => {
+      // ---------------------------
+      // State
+      // ---------------------------
+      const state = {
+        a: 0,
+        b: 0,
+        opKey: "add", // add/sub/mul/div
+        answer: 0,
+        checked: false,
+        maxN: 20,
+        mode: 1, // 0:やさしい(1桁) 1:ふつう(2桁) 2:むずかしい(3桁)
+        limitSec: 0,
+        timeLeft: 0,
+        timerId: null,
+
+        total: 0,
+        correct: 0,
+        streak: 0,
+        best: 0,
+
+        ops: { add:true, sub:true, mul:true, div:true },
+      };
+
+      // ---------------------------
+      // Elements
+      // ---------------------------
+      const el = {
+        a: document.getElementById("a"),
+        b: document.getElementById("b"),
+        op: document.getElementById("op"),
+        signSel: document.getElementById("signSel"),
+        digitGroup: document.getElementById("digitGroup"),
+        checkBtn: document.getElementById("checkBtn"),
+        nextBtn: document.getElementById("nextBtn"),
+        resetBtn: document.getElementById("resetBtn"),
+        toast: document.getElementById("toast"),
+        toastTitle: document.getElementById("toastTitle"),
+        toastMsg: document.getElementById("toastMsg"),
+        toastBadge: document.getElementById("toastBadge"),
+        hint: document.getElementById("hint"),
+
+        correct: document.getElementById("correct"),
+        total: document.getElementById("total"),
+        acc: document.getElementById("acc"),
+        streak: document.getElementById("streak"),
+        best: document.getElementById("best"),
+
+        maxN: document.getElementById("maxN"),
+        maxNLabel: document.getElementById("maxNLabel"),
+        mode: document.getElementById("mode"),
+        modeLabel: document.getElementById("modeLabel"),
+        modeBadge: document.getElementById("modeBadge"),
+        limit: document.getElementById("limit"),
+        limitLabel: document.getElementById("limitLabel"),
+
+        timeLeft: document.getElementById("timeLeft"),
+        timeBar: document.getElementById("timeBar"),
+        chips: Array.from(document.querySelectorAll(".chip[data-op]")),
+      };
+
+      // ---------------------------
+      // Helpers
+      // ---------------------------
+      const randInt = (min, maxInclusive) => {
+        return Math.floor(Math.random() * (maxInclusive - min + 1)) + min;
+      };
+
+      const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+
+      const opSymbol = (k) => ({
+        add: "＋",
+        sub: "−",
+        mul: "×",
+        div: "÷"
+      }[k]);
+
+      const modeInfo = (m) => {
+        if (m === 0) return { name: "やさしい", digits: 1, label: "やさしい（最大1桁）" };
+        if (m === 2) return { name: "むずかしい", digits: 3, label: "むずかしい（最大3桁）" };
+        return { name: "ふつう", digits: 2, label: "ふつう（最大2桁）" };
+      };
+
+      const activeOps = () => Object.entries(state.ops).filter(([,v]) => v).map(([k]) => k);
+
+      const speakToast = (type, title, msg) => {
+        el.toast.classList.remove("good", "bad");
+        if (type === "good") el.toast.classList.add("good");
+        if (type === "bad") el.toast.classList.add("bad");
+        el.toastTitle.textContent = title;
+        el.toastMsg.textContent = msg;
+        el.toastBadge.textContent = `連続正解 ${state.streak}`;
+      };
+
+      const setHint = (text) => { el.hint.innerHTML = text; };
+
+      const updateStatsUI = () => {
+        el.correct.textContent = String(state.correct);
+        el.total.textContent = String(state.total);
+        el.streak.textContent = String(state.streak);
+        el.best.textContent = String(state.best);
+        el.acc.textContent = state.total === 0 ? "--" : Math.round((state.correct / state.total) * 100);
+      };
+
+      const stopTimer = () => {
+        if (state.timerId) clearInterval(state.timerId);
+        state.timerId = null;
+        state.timeLeft = 0;
+        el.timeLeft.textContent = "--";
+        el.timeBar.style.transform = "scaleX(1)";
+      };
+
+      const startTimerIfNeeded = () => {
+        stopTimer();
+        if (state.limitSec <= 0) return;
+
+        state.timeLeft = state.limitSec;
+        el.timeLeft.textContent = String(state.timeLeft);
+
+        const tick = () => {
+          state.timeLeft--;
+          el.timeLeft.textContent = String(Math.max(0, state.timeLeft));
+
+          const ratio = clamp(state.timeLeft / state.limitSec, 0, 1);
+          el.timeBar.style.transform = `scaleX(${ratio})`;
+
+          if (state.timeLeft <= 0) {
+            clearInterval(state.timerId);
+            state.timerId = null;
+            // 時間切れは「不正解として確定」→次へを促す
+            if (!state.checked) {
+              state.checked = true;
+              state.total++;
+              state.streak = 0;
+              updateStatsUI();
+              el.nextBtn.disabled = false;
+              speakToast("bad", "時間切れ", `正解は ${formatAnswer(state.answer)} です。`);
+              setHint("つぎは <b>ゆっくりでもOK</b>。まずは式を正しく読む練習からいきましょう。");
+            }
+          }
+        };
+
+        state.timerId = setInterval(tick, 1000);
+        // 初期バー
+        el.timeBar.style.transform = "scaleX(1)";
+      };
+
+      const formatAnswer = (n) => {
+        // 表示は「−」を使う
+        if (n < 0) return "−" + String(Math.abs(n));
+        return String(n);
+      };
+
+      const getSelectedNumber = () => {
+        // 桁selectを連結して数値化（先頭0可→普通にparseIntでOK。空は0扱いにしない）
+        const selects = Array.from(el.digitGroup.querySelectorAll("select[data-digit]"));
+        const s = selects.map(x => x.value).join("");
+        const sign = el.signSel.value;
+        const val = parseInt(s, 10);
+        if (Number.isNaN(val)) return null;
+        return sign === "-" ? -val : val;
+      };
+
+      const buildDigitSelects = (targetAbsValueMax) => {
+        // 回答の最大値に応じて必要桁数を決定（最低1桁、最大4桁）
+        const digits = Math.max(1, Math.min(4, String(targetAbsValueMax).length));
+        el.digitGroup.innerHTML = "";
+
+        for (let i = 0; i < digits; i++) {
+          const wrap = document.createElement("div");
+          wrap.className = "selectWrap";
+
+          const sel = document.createElement("select");
+          sel.className = "digitSel";
+          sel.setAttribute("data-digit", String(i));
+          sel.setAttribute("aria-label", `${i+1}桁目を選択`);
+
+          for (let d = 0; d <= 9; d++) {
+            const opt = document.createElement("option");
+            opt.value = String(d);
+            opt.textContent = String(d);
+            sel.appendChild(opt);
+          }
+
+          wrap.appendChild(sel);
+          el.digitGroup.appendChild(wrap);
+        }
+
+        // 初期値は 0..0
+        Array.from(el.digitGroup.querySelectorAll("select")).forEach(s => s.value = "0");
+      };
+
+      const pickOperands = (opKey) => {
+        const { digits } = modeInfo(state.mode);
+        const maxByDigits = digits === 1 ? 9 : (digits === 2 ? 99 : 999);
+        const maxN = clamp(state.maxN, 5, 999);
+
+        // 生成範囲は「maxN」と「桁モード」の小さい方で抑える（苦手生徒向け）
+        const cap = Math.min(maxN, maxByDigits);
+
+        let a, b, ans;
+
+        if (opKey === "add") {
+          a = randInt(0, cap);
+          b = randInt(0, cap);
+          ans = a + b;
+
+        } else if (opKey === "sub") {
+          // 基本はマイナスも出し得る（符号選択の練習）
+          a = randInt(0, cap);
+          b = randInt(0, cap);
+          ans = a - b;
+
+        } else if (opKey === "mul") {
+          // 掛け算は少し控えめに（体感負荷を下げる）
+          const cap2 = Math.max(5, Math.floor(cap / 2));
+          a = randInt(0, cap2);
+          b = randInt(0, cap2);
+          ans = a * b;
+
+        } else { // div
+          // 割り切れる整数問題だけ
+          // ans = a / b (b≠0) を作るために、商 q と除数 b から被除数 a を作る
+          const capB = Math.max(2, Math.floor(Math.sqrt(cap)) + 2);
+          const bMin = 1;
+          const bMax = Math.min(capB, 30);
+
+          const qMax = Math.max(2, Math.floor(cap / 2));
+          const q = randInt(0, Math.min(qMax, 50)); // 商は最大50程度に抑える
+          b = randInt(bMin, bMax);
+          a = q * b;
+          // capを超えたら作り直し（最大10回程度）
+          let tries = 0;
+          while (a > cap && tries < 20) {
+            b = randInt(bMin, bMax);
+            const q2 = randInt(0, Math.min(qMax, 50));
+            a = q2 * b;
+            tries++;
+          }
+          ans = b === 0 ? 0 : (a / b);
+        }
+
+        return { a, b, ans };
+      };
+
+      const pickOp = () => {
+        const ops = activeOps();
+        if (ops.length === 0) {
+          // 何も選ばれてない場合は add を強制ON
+          state.ops.add = true;
+          syncChips();
+          return "add";
+        }
+        return ops[randInt(0, ops.length - 1)];
+      };
+
+      const syncChips = () => {
+        for (const chip of el.chips) {
+          const k = chip.getAttribute("data-op");
+          const checked = !!state.ops[k];
+          chip.dataset.checked = checked ? "true" : "false";
+          chip.setAttribute("aria-checked", checked ? "true" : "false");
+          const input = chip.querySelector("input");
+          if (input) input.checked = checked;
+        }
+      };
+
+      // ---------------------------
+      // Core: New Problem
+      // ---------------------------
+      const newProblem = () => {
+        state.checked = false;
+        el.nextBtn.disabled = true;
+
+        state.opKey = pickOp();
+        const { a, b, ans } = pickOperands(state.opKey);
+
+        state.a = a;
+        state.b = b;
+        state.answer = ans;
+
+        el.a.textContent = String(a);
+        el.b.textContent = String(b);
+        el.op.textContent = opSymbol(state.opKey);
+
+        // 回答欄の桁数を「正解の絶対値」に合わせて調整（最大4桁）
+        const maxAbs = Math.max(9, Math.abs(ans));
+        buildDigitSelects(maxAbs);
+
+        // 符号初期は＋
+        el.signSel.value = "+";
+
+        // ヒント（演算別）
+        if (state.opKey === "sub") {
+          setHint("ひき算は <b>どっちが大きいか</b> を見ましょう。小さい方を大きい方から引くイメージ。");
+        } else if (state.opKey === "div") {
+          setHint("わり算は <b>何回分</b> で考えるとラクです。ここでは必ず割り切れます。");
+        } else if (state.opKey === "mul") {
+          setHint("かけ算は <b>同じ数をくり返し足す</b> と考えてもOKです。");
+        } else {
+          setHint("たし算は <b>一の位 → 十の位</b> の順に見るとミスが減ります。");
+        }
+
+        speakToast("", "新しい問題です", "符号（±）と数字を選んで「答え合わせ」。");
+        startTimerIfNeeded();
+      };
+
+      // ---------------------------
+      // Check Answer
+      // ---------------------------
+      const check = () => {
+        if (state.checked) return;
+
+        const chosen = getSelectedNumber();
+        if (chosen === null) return;
+
+        state.checked = true;
+        state.total++;
+
+        const ok = chosen === state.answer;
+
+        if (ok) {
+          state.correct++;
+          state.streak++;
+          state.best = Math.max(state.best, state.streak);
+          speakToast("good", "正解！", "いい感じです。つぎも同じ調子でいきましょう。");
+          setHint("ナイス！次は <b>同じ手順</b> で確認できるかを意識すると定着します。");
+        } else {
+          state.streak = 0;
+          speakToast("bad", "おしい！", `正解は ${formatAnswer(state.answer)} です。`);
+          // さりげない解法ヒント（苦手生徒向け）
+          if (state.opKey === "sub") {
+            setHint("ひき算は <b>大きい−小さい</b> にしてから、必要なら <b>マイナス</b> を付ける意識も◎。");
+          } else if (state.opKey === "div") {
+            setHint("わり算は「<b>同じ数で何個に分ける</b>」イメージ。割り切れるので焦らなくてOKです。");
+          } else if (state.opKey === "mul") {
+            setHint("かけ算は「<b>回数</b>」をイメージ。小さい方から数えると楽なことがあります。");
+          } else {
+            setHint("たし算は <b>一の位を先に</b>。くり上がりがあるかだけチェックしましょう。");
+          }
+        }
+
+        updateStatsUI();
+        el.nextBtn.disabled = false;
+        stopTimer();
+      };
+
+      const resetAll = () => {
+        stopTimer();
+        state.total = 0;
+        state.correct = 0;
+        state.streak = 0;
+        state.best = 0;
+        updateStatsUI();
+        speakToast("", "リセットしました", "設定はそのまま、最初からやり直せます。");
+        newProblem();
+      };
+
+      // ---------------------------
+      // Settings
+      // ---------------------------
+      const applySettingsUI = () => {
+        state.maxN = parseInt(el.maxN.value, 10);
+        el.maxNLabel.textContent = String(state.maxN);
+
+        state.mode = parseInt(el.mode.value, 10);
+        const mi = modeInfo(state.mode);
+        el.modeLabel.textContent = mi.label;
+        el.modeBadge.textContent = `モード：${mi.name}`;
+
+        state.limitSec = parseInt(el.limit.value, 10);
+        el.limitLabel.textContent = String(state.limitSec);
+
+        // 出題を更新
+        newProblem();
+      };
+
+      // ---------------------------
+      // Events
+      // ---------------------------
+      el.checkBtn.addEventListener("click", check);
+      el.nextBtn.addEventListener("click", newProblem);
+      el.resetBtn.addEventListener("click", resetAll);
+
+      el.maxN.addEventListener("input", () => {
+        state.maxN = parseInt(el.maxN.value, 10);
+        el.maxNLabel.textContent = String(state.maxN);
+      });
+      el.maxN.addEventListener("change", applySettingsUI);
+
+      el.mode.addEventListener("input", () => {
+        state.mode = parseInt(el.mode.value, 10);
+        const mi = modeInfo(state.mode);
+        el.modeLabel.textContent = mi.label;
+        el.modeBadge.textContent = `モード：${mi.name}`;
+      });
+      el.mode.addEventListener("change", applySettingsUI);
+
+      el.limit.addEventListener("input", () => {
+        state.limitSec = parseInt(el.limit.value, 10);
+        el.limitLabel.textContent = String(state.limitSec);
+      });
+      el.limit.addEventListener("change", applySettingsUI);
+
+      // chips
+      for (const chip of el.chips) {
+        const toggleChip = () => {
+          const k = chip.getAttribute("data-op");
+          state.ops[k] = !state.ops[k];
+          // 最低1つはONにする
+          if (activeOps().length === 0) state.ops[k] = true;
+          syncChips();
+          newProblem();
+        };
+
+        chip.addEventListener("click", toggleChip);
+        chip.addEventListener("keydown", (e) => {
+          if (e.key === " " || e.key === "Enter") {
+            e.preventDefault();
+            toggleChip();
+          }
+        });
+      }
+
+      // Keyboard shortcuts
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          check();
+        } else if (e.key.toLowerCase() === "n") {
+          if (!el.nextBtn.disabled) newProblem();
+        } else if (e.key.toLowerCase() === "r") {
+          resetAll();
+        }
+      });
+
+      // ---------------------------
+      // Init
+      // ---------------------------
+      const init = () => {
+        syncChips();
+        updateStatsUI();
+        // 初期ラベル反映
+        el.maxNLabel.textContent = el.maxN.value;
+        el.limitLabel.textContent = el.limit.value;
+        const mi = modeInfo(parseInt(el.mode.value, 10));
+        el.modeLabel.textContent = mi.label;
+        el.modeBadge.textContent = `モード：${mi.name}`;
+
+        newProblem();
+      };
+
+      init();
+    })();
+  </script>
+</body>
+</html>
